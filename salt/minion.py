@@ -782,17 +782,20 @@ class Minion(MinionBase):
             self.returners)
 
         # add default scheduling jobs to the minions scheduler
-        if 'mine.update' in self.functions:
-            log.info('Added mine.update to scheduler')
+        if self.opts['mine_enabled'] and 'mine.update' in self.functions:
             self.schedule.add_job({
                 '__mine_interval':
                 {
                     'function': 'mine.update',
                     'minutes': self.opts['mine_interval'],
                     'jid_include': True,
-                    'maxrunning': 2
+                    'maxrunning': 2,
+                    'return_job': self.opts.get('mine_return_job', False)
                 }
             }, persist=True)
+            log.info('Added mine.update to scheduler')
+        else:
+            self.schedule.delete_job('__mine_interval', persist=True)
 
         # add master_alive job if enabled
         if self.opts['master_alive_interval'] > 0:
@@ -1203,6 +1206,13 @@ class Minion(MinionBase):
         salt.utils.appendproctitle(data['jid'])
         # this seems awkward at first, but it's a workaround for Windows
         # multiprocessing communication.
+        if sys.platform.startswith('win') and \
+                opts['multiprocessing'] and \
+                not salt.log.is_logging_configured():
+            # We have to re-init the logging system for Windows
+            salt.log.setup_console_logger(log_level=opts.get('log_level', 'info'))
+            if opts.get('log_file'):
+                salt.log.setup_logfile_logger(opts['log_file'], opts.get('log_level_logfile', 'info'))
         if not minion_instance:
             minion_instance = cls(opts)
         ret = {
@@ -2625,17 +2635,20 @@ class ProxyMinion(Minion):
             self.returners)
 
         # add default scheduling jobs to the minions scheduler
-        if 'mine.update' in self.functions:
-            log.info('Added mine.update to scheduler')
+        if self.opts['mine_enabled'] and 'mine.update' in self.functions:
             self.schedule.add_job({
                 '__mine_interval':
                     {
                         'function': 'mine.update',
                         'minutes': self.opts['mine_interval'],
                         'jid_include': True,
-                        'maxrunning': 2
+                        'maxrunning': 2,
+                        'return_job': self.opts.get('mine_return_job', False)
                     }
             }, persist=True)
+            log.info('Added mine.update to scheduler')
+        else:
+            self.schedule.delete_job('__mine_interval', persist=True)
 
         # add master_alive job if enabled
         if self.opts['master_alive_interval'] > 0:

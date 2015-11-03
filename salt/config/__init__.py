@@ -231,8 +231,14 @@ VALID_OPTS = {
     # A flag indicating that a master should accept any minion connection without any authentication
     'open_mode': bool,
 
-    # Whether or not processes should be forked when needed. The altnerative is to use threading.
+    # Whether or not processes should be forked when needed. The alternative is to use threading.
     'multiprocessing': bool,
+
+    # Whether or not the salt minion should run scheduled mine updates
+    'mine_enabled': bool,
+
+    # Whether or not scheduled mine updates should be accompanied by a job return for the job cache
+    'mine_return_job': bool,
 
     # Schedule a mine update every n number of seconds
     'mine_interval': int,
@@ -862,6 +868,8 @@ DEFAULT_MINION_OPTS = {
     'auto_accept': True,
     'autosign_timeout': 120,
     'multiprocessing': _DFLT_MULTIPROCESSING_MODE,
+    'mine_enabled': True,
+    'mine_return_job': False,
     'mine_interval': 60,
     'ipc_mode': _DFLT_IPC_MODE,
     'ipv6': False,
@@ -1202,6 +1210,8 @@ DEFAULT_MASTER_OPTS = {
     'dummy_pub': False,
     'http_request_timeout': 1 * 60 * 60.0,  # 1 hour
     'http_max_body': 100 * 1024 * 1024 * 1024,  # 100GB
+    'python2_bin': 'python2',
+    'python3_bin': 'python3',
 }
 
 
@@ -2738,12 +2748,14 @@ def apply_minion_config(overrides=None,
     if overrides:
         opts.update(overrides)
 
+    opts['__cli'] = os.path.basename(sys.argv[0])
+
     if len(opts['sock_dir']) > len(opts['cachedir']) + 10:
         opts['sock_dir'] = os.path.join(opts['cachedir'], '.salt-unix')
 
     # No ID provided. Will getfqdn save us?
     using_ip_for_id = False
-    if opts['id'] is None:
+    if not opts.get('id'):
         opts['id'], using_ip_for_id = get_id(
                 opts,
                 cache_minion_id=cache_minion_id)
@@ -2860,7 +2872,7 @@ def apply_master_config(overrides=None, defaults=None):
 
     using_ip_for_id = False
     append_master = False
-    if opts.get('id') is None:
+    if not opts.get('id'):
         opts['id'], using_ip_for_id = get_id(
                 opts,
                 cache_minion_id=None)
