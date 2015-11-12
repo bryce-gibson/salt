@@ -28,6 +28,7 @@ import salt.utils.templates
 import salt.utils.url
 import salt.utils.gzip_util
 import salt.utils.http
+import salt.utils.s3
 from salt.utils.locales import sdecode
 from salt.utils.openstack.swift import SaltSwift
 
@@ -229,6 +230,7 @@ class Client(object):
         # go through the list of all files finding ones that are in
         # the target directory and caching them
         for fn_ in self.file_list(saltenv):
+            fn_ = sdecode(fn_)
             if fn_.strip() and fn_.startswith(path):
                 if salt.utils.check_include_exclude(
                         fn_, include_pat, exclude_pat):
@@ -252,6 +254,7 @@ class Client(object):
                 saltenv
             )
             for fn_ in self.file_list_emptydirs(saltenv):
+                fn_ = sdecode(fn_)
                 if fn_.startswith(path):
                     minion_dir = '{0}/{1}'.format(dest, fn_)
                     if not os.path.isdir(minion_dir):
@@ -555,23 +558,30 @@ class Client(object):
 
         if url_data.scheme == 's3':
             try:
+                import salt.utils.s3
+
+                def s3_opt(key, default=None):
+                    '''Get value of s3.<key> from Minion config or from Pillar'''
+                    if 's3.' + key in self.opts:
+                        return self.opts['s3.' + key]
+                    try:
+                        return self.opts['pillar']['s3'][key]
+                    except (KeyError, TypeError):
+                        return default
                 salt.utils.s3.query(method='GET',
                                     bucket=url_data.netloc,
                                     path=url_data.path[1:],
                                     return_bin=False,
                                     local_file=dest,
                                     action=None,
-                                    key=self.opts.get('s3.key', None),
-                                    keyid=self.opts.get('s3.keyid', None),
-                                    service_url=self.opts.get('s3.service_url',
-                                                              None),
-                                    verify_ssl=self.opts.get('s3.verify_ssl',
-                                                              True),
-                                    location=self.opts.get('s3.location',
-                                                              None))
+                                    key=s3_opt('key'),
+                                    keyid=s3_opt('keyid'),
+                                    service_url=s3_opt('service_url'),
+                                    verify_ssl=s3_opt('verify_ssl', True),
+                                    location=s3_opt('location'))
                 return dest
-            except Exception:
-                raise MinionError('Could not fetch from {0}'.format(url))
+            except Exception as exc:
+                raise MinionError('Could not fetch from {0}. Exception: {1}'.format(url, exc))
         if url_data.scheme == 'ftp':
             try:
                 ftp = ftplib.FTP(url_data.hostname)
@@ -618,11 +628,11 @@ class Client(object):
             if 'text' not in query:
                 raise MinionError('Error: {0}'.format(query['error']))
             if no_cache:
-                return query['text']
+                return query['body']
             else:
                 dest_tmp = "{0}.part".format(dest)
                 with salt.utils.fopen(dest_tmp, 'wb') as destfp:
-                    destfp.write(query['text'])
+                    destfp.write(query['body'])
                 salt.utils.files.rename(dest_tmp, dest)
                 return dest
         except HTTPError as exc:

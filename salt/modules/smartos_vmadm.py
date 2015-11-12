@@ -158,7 +158,7 @@ def _create_update_from_cfg(mode='create', uuid=None, vmcfg=None):
     return True
 
 
-def start(vm=None, options=None, key='uuid'):
+def start(vm, options=None, key='uuid'):
     '''
     Start a vm
 
@@ -180,9 +180,6 @@ def start(vm=None, options=None, key='uuid'):
     '''
     ret = {}
     vmadm = _check_vmadm()
-    if vm is None:
-        ret['Error'] = 'uuid, alias or hostname must be provided'
-        return ret
     if key not in ['uuid', 'alias', 'hostname']:
         ret['Error'] = 'Key must be either uuid, alias or hostname'
         return ret
@@ -203,7 +200,7 @@ def start(vm=None, options=None, key='uuid'):
     return True
 
 
-def stop(vm=None, force=False, key='uuid'):
+def stop(vm, force=False, key='uuid'):
     '''
     Stop a vm
 
@@ -225,9 +222,6 @@ def stop(vm=None, force=False, key='uuid'):
     '''
     ret = {}
     vmadm = _check_vmadm()
-    if vm is None:
-        ret['Error'] = 'uuid, alias or hostname must be provided'
-        return ret
     if key not in ['uuid', 'alias', 'hostname']:
         ret['Error'] = 'Key must be either uuid, alias or hostname'
         return ret
@@ -248,7 +242,7 @@ def stop(vm=None, force=False, key='uuid'):
     return True
 
 
-def reboot(vm=None, force=False, key='uuid'):
+def reboot(vm, force=False, key='uuid'):
     '''
     Reboot a vm
 
@@ -270,9 +264,6 @@ def reboot(vm=None, force=False, key='uuid'):
     '''
     ret = {}
     vmadm = _check_vmadm()
-    if vm is None:
-        ret['Error'] = 'uuid, alias or hostname must be provided'
-        return ret
     if key not in ['uuid', 'alias', 'hostname']:
         ret['Error'] = 'Key must be either uuid, alias or hostname'
         return ret
@@ -305,7 +296,7 @@ def list_vms(search=None, sort=None, order='uuid,type,ram,state,alias', keyed=Fa
         vmadm order (-o) property -- Default: uuid,type,ram,state,alias
     keyed : boolean
         specified if the output should be an array (False) or dict (True)
-            For a dict the key is the first ietem from the order parameter.
+            For a dict the key is the first item from the order parameter.
             Note: If key is not unique last vm wins.
 
     CLI Example:
@@ -397,14 +388,14 @@ def lookup(search=None, order=None, one=False):
     return result
 
 
-def sysrq(vm=None, action='nmi', key='uuid'):
+def sysrq(vm, action='nmi', key='uuid'):
     '''
     Send non-maskable interupt to vm or capture a screenshot
 
     vm : string
         vm to be targetted
     action : string
-        nmi or screenshot
+        nmi or screenshot -- Default: nmi
     key : string [uuid|alias|hostname]
         value type of 'vm' parameter
 
@@ -418,9 +409,6 @@ def sysrq(vm=None, action='nmi', key='uuid'):
     '''
     ret = {}
     vmadm = _check_vmadm()
-    if vm is None:
-        ret['Error'] = 'uuid, alias or hostname must be provided'
-        return ret
     if key not in ['uuid', 'alias', 'hostname']:
         ret['Error'] = 'Key must be either uuid, alias or hostname'
         return ret
@@ -444,7 +432,7 @@ def sysrq(vm=None, action='nmi', key='uuid'):
     return True
 
 
-def delete(vm=None, key='uuid'):
+def delete(vm, key='uuid'):
     '''
     Delete a vm
 
@@ -462,9 +450,6 @@ def delete(vm=None, key='uuid'):
     '''
     ret = {}
     vmadm = _check_vmadm()
-    if vm is None:
-        ret['Error'] = 'uuid, alias or hostname must be provided'
-        return ret
     if key not in ['uuid', 'alias', 'hostname']:
         ret['Error'] = 'Key must be either uuid, alias or hostname'
         return ret
@@ -484,7 +469,7 @@ def delete(vm=None, key='uuid'):
     return True
 
 
-def get(vm=None, key='uuid'):
+def get(vm, key='uuid'):
     '''
     Output the JSON object describing a VM
 
@@ -502,9 +487,6 @@ def get(vm=None, key='uuid'):
     '''
     ret = {}
     vmadm = _check_vmadm()
-    if vm is None:
-        ret['Error'] = 'uuid, alias or hostname must be provided'
-        return ret
     if key not in ['uuid', 'alias', 'hostname']:
         ret['Error'] = 'Key must be either uuid, alias or hostname'
         return ret
@@ -524,7 +506,7 @@ def get(vm=None, key='uuid'):
     return json.loads(res['stdout'])
 
 
-def info(vm=None, info_type='all', key='uuid'):
+def info(vm, info_type='all', key='uuid'):
     '''
     Lookup info on running kvm
 
@@ -546,9 +528,6 @@ def info(vm=None, info_type='all', key='uuid'):
     '''
     ret = {}
     vmadm = _check_vmadm()
-    if vm is None:
-        ret['Error'] = 'uuid, alias or hostname must be provided'
-        return ret
     if info_type not in ['all', 'block', 'blockstats', 'chardev', 'cpus', 'kvm', 'pci', 'spice', 'version', 'vnc']:
         ret['Error'] = 'Requested info_type is not available'
         return ret
@@ -572,7 +551,7 @@ def info(vm=None, info_type='all', key='uuid'):
     return json.loads(res['stdout'])
 
 
-def create_snapshot(vm=None, name=None, key='uuid'):
+def create_snapshot(vm, name, key='uuid'):
     '''
     Create snapshot of a vm
 
@@ -595,12 +574,6 @@ def create_snapshot(vm=None, name=None, key='uuid'):
     '''
     ret = {}
     vmadm = _check_vmadm()
-    if vm is None:
-        ret['Error'] = 'uuid, alias or hostname must be provided'
-        return ret
-    if name is None:
-        ret['Error'] = 'Snapshot name most be specified'
-        return ret
     if key not in ['uuid', 'alias', 'hostname']:
         ret['Error'] = 'Key must be either uuid, alias or hostname'
         return ret
@@ -631,7 +604,7 @@ def create_snapshot(vm=None, name=None, key='uuid'):
     return True
 
 
-def delete_snapshot(vm=None, name=None, key='uuid'):
+def delete_snapshot(vm, name, key='uuid'):
     '''
     Delete snapshot of a vm
 
@@ -654,12 +627,6 @@ def delete_snapshot(vm=None, name=None, key='uuid'):
     '''
     ret = {}
     vmadm = _check_vmadm()
-    if vm is None:
-        ret['Error'] = 'uuid, alias or hostname must be provided'
-        return ret
-    if name is None:
-        ret['Error'] = 'Snapshot name most be specified'
-        return ret
     if key not in ['uuid', 'alias', 'hostname']:
         ret['Error'] = 'Key must be either uuid, alias or hostname'
         return ret
@@ -687,7 +654,7 @@ def delete_snapshot(vm=None, name=None, key='uuid'):
     return True
 
 
-def rollback_snapshot(vm=None, name=None, key='uuid'):
+def rollback_snapshot(vm, name, key='uuid'):
     '''
     Rollback snapshot of a vm
 
@@ -710,12 +677,6 @@ def rollback_snapshot(vm=None, name=None, key='uuid'):
     '''
     ret = {}
     vmadm = _check_vmadm()
-    if vm is None:
-        ret['Error'] = 'uuid, alias or hostname must be provided'
-        return ret
-    if name is None:
-        ret['Error'] = 'Snapshot name most be specified'
-        return ret
     if key not in ['uuid', 'alias', 'hostname']:
         ret['Error'] = 'Key must be either uuid, alias or hostname'
         return ret
@@ -743,7 +704,7 @@ def rollback_snapshot(vm=None, name=None, key='uuid'):
     return True
 
 
-def reprovision(vm=None, image=None, key='uuid'):
+def reprovision(vm, image, key='uuid'):
     '''
     Reprovision a vm
 
@@ -763,12 +724,6 @@ def reprovision(vm=None, image=None, key='uuid'):
     '''
     ret = {}
     vmadm = _check_vmadm()
-    if vm is None:
-        ret['Error'] = 'uuid, alias or hostname must be provided'
-        return ret
-    if image is None:
-        ret['Error'] = 'Image uuid must be specified'
-        return ret
     if key not in ['uuid', 'alias', 'hostname']:
         ret['Error'] = 'Key must be either uuid, alias or hostname'
         return ret
@@ -792,7 +747,7 @@ def reprovision(vm=None, image=None, key='uuid'):
     return True
 
 
-def create(**kwargs):
+def create(from_file=None, **kwargs):
     '''
     Create a new vm
 
@@ -809,30 +764,29 @@ def create(**kwargs):
         salt '*' vmadm.create image_uuid='...' alias='...' nics='[{ "nic_tag": "admin", "ip": "198.51.100.123", ...}, {...}]' [...]
     '''
     ret = {}
-    vmadm = _check_vmadm()
     # prepare vmcfg
     vmcfg = {}
-    for key, value in kwargs.iteritems():
-        if key.startswith('_'):
+    for k, v in kwargs.iteritems():
+        if k.startswith('_'):
             continue
-        vmcfg[key] = value
+        vmcfg[k] = v
 
-    if 'from_file' in vmcfg:
-        return _create_update_from_file('create', path=vmcfg['from_file'])
+    if from_file:
+        return _create_update_from_file('create', path=from_file)
     else:
         return _create_update_from_cfg('create', vmcfg=vmcfg)
 
 
-def update(**kwargs):
+def update(vm, from_file=None, key='uuid', **kwargs):
     '''
     Update a new vm
 
     vm : string
         vm to be updated
-    key : string [uuid|alias|hostname]
-        value type of 'vm' parameter
     from_file : string
         json file to update the vm with -- if present, all other options will be ignored
+    key : string [uuid|alias|hostname]
+        value type of 'vm' parameter
     kwargs : string|int|...
         options to update for the vm
 
@@ -848,33 +802,25 @@ def update(**kwargs):
     vmadm = _check_vmadm()
     # prepare vmcfg
     vmcfg = {}
-    for key, value in kwargs.iteritems():
-        if key.startswith('_'):
+    for k, v in kwargs.iteritems():
+        if k.startswith('_'):
             continue
-        vmcfg[key] = value
+        vmcfg[k] = v
 
-    if 'vm' not in vmcfg:
-        ret['Error'] = 'uuid, alias or hostname must be provided'
-        return ret
-    key = 'uuid' if 'key' not in vmcfg else vmcfg['key']
     if key not in ['uuid', 'alias', 'hostname']:
         ret['Error'] = 'Key must be either uuid, alias or hostname'
         return ret
-    uuid = lookup('{0}={1}'.format(key, vmcfg['vm']), one=True)
+    uuid = lookup('{0}={1}'.format(key, vm), one=True)
     if 'Error' in uuid:
         return uuid
-    if 'vm' in vmcfg:
-        del vmcfg['vm']
-    if 'key' in vmcfg:
-        del vmcfg['key']
 
-    if 'from_file' in vmcfg:
-        return _create_update_from_file('update', uuid, path=vmcfg['from_file'])
+    if from_file:
+        return _create_update_from_file('update', uuid, path=from_file)
     else:
         return _create_update_from_cfg('update', uuid, vmcfg=vmcfg)
 
 
-def send(vm=None, target=None, key='uuid'):
+def send(vm, target, key='uuid'):
     '''
     Send a vm to a directory
 
@@ -895,14 +841,8 @@ def send(vm=None, target=None, key='uuid'):
     ret = {}
     vmadm = _check_vmadm()
     zfs = _check_zfs()
-    if vm is None:
-        ret['Error'] = 'uuid, alias or hostname must be provided'
-        return ret
     if key not in ['uuid', 'alias', 'hostname']:
         ret['Error'] = 'Key must be either uuid, alias or hostname'
-        return ret
-    if target is None:
-        ret['Error'] = 'Target must be specified'
         return ret
     if not os.path.isdir(target):
         ret['Error'] = 'Target must be a directory or host'
@@ -942,7 +882,7 @@ def send(vm=None, target=None, key='uuid'):
     return True
 
 
-def receive(uuid=None, source=None):
+def receive(uuid, source):
     '''
     Receive a vm from a directory
 
@@ -960,12 +900,6 @@ def receive(uuid=None, source=None):
     ret = {}
     vmadm = _check_vmadm()
     zfs = _check_zfs()
-    if uuid is None:
-        ret['Error'] = 'uuid must be provided'
-        return ret
-    if source is None:
-        ret['Error'] = 'Source must be specified'
-        return ret
     if not os.path.isdir(source):
         ret['Error'] = 'Source must be a directory or host'
         return ret

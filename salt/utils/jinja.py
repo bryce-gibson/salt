@@ -116,7 +116,7 @@ class SaltCacheLoader(BaseLoader):
             tpldir = path.dirname(template).replace('\\', '/')
             tpldata = {
                 'tplfile': template,
-                'tpldir': tpldir,
+                'tpldir': '.' if tpldir == '' else tpldir,
                 'tpldot': tpldir.replace('/', '.'),
             }
             environment.globals.update(tpldata)
@@ -221,7 +221,7 @@ class SerializerExtension(Extension, object):
 
     **Format filters**
 
-    Allows to jsonify or yamlify any data structure. For example, this dataset:
+    Allows jsonifying or yamlifying any data structure. For example, this dataset:
 
     .. code-block:: python
 
