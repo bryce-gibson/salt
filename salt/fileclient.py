@@ -618,6 +618,7 @@ class Client(object):
 
         destfp = None
         try:
+            import salt.utils.http
             query = salt.utils.http.query(
                 fixed_url,
                 text=True,
