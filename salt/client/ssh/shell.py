@@ -341,6 +341,7 @@ class Shell(object):
         sent_passwd = 0
         ret_stdout = ''
         ret_stderr = ''
+        stdout_buffer = ''
 
         try:
             while term.has_unread_data:
@@ -349,27 +350,35 @@ class Shell(object):
                     ret_stdout += stdout
                 if stderr:
                     ret_stderr += stderr
-                if stdout and SSH_PASSWORD_PROMPT_RE.search(stdout):
+                if stdout:
+                    stdout_buffer = (stdout_buffer + stdout)[-255:] # Limit the buffer size
+
+                if stdout_buffer and SSH_PASSWORD_PROMPT_RE.search(stdout_buffer):
+                    stdout_buffer = ''
                     if not self.passwd:
                         return '', 'Permission denied, no authentication information', 254
                     if sent_passwd < passwd_retries:
+                        log.trace("Sending password to ssh shim.")
                         term.sendline(self.passwd)
                         sent_passwd += 1
                         continue
                     else:
                         # asking for a password, and we can't seem to send it
                         return '', 'Password authentication failed', 254
-                elif stdout and KEY_VALID_RE.search(stdout):
+                elif stdout_buffer and KEY_VALID_RE.search(stdout_buffer):
                     if key_accept:
                         term.sendline('yes')
+                        stdout_buffer = ''
                         continue
                     else:
                         term.sendline('no')
                         ret_stdout = ('The host key needs to be accepted, to '
                                       'auto accept run salt-ssh with the -i '
-                                      'flag:\n{0}').format(stdout)
+                                      'flag:\n{0}').format(stdout_buffer)
+                        stdout_buffer = ''
                         return ret_stdout, '', 254
-                elif stdout and stdout.endswith('_||ext_mods||_'):
+                elif stdout_buffer and stdout_buffer.endswith('_||ext_mods||_'):
+                    stdout_buffer = ''
                     mods_raw = json.dumps(self.mods, separators=(',', ':')) + '|_E|0|'
                     term.sendline(mods_raw)
                 time.sleep(0.01)
